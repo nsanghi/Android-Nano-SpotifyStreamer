@@ -34,6 +34,7 @@ public class ArtistTracksActivityFragment extends Fragment {
 
     private TrackArrayAdapter mTrackAdapter;
     private String mSpotifyId;
+    private static Toast mToast;
 
     public ArtistTracksActivityFragment() {
     }
@@ -48,6 +49,7 @@ public class ArtistTracksActivityFragment extends Fragment {
 
         if (savedInstanceState == null || !savedInstanceState.containsKey(EXTRA_TRACKLIST)) {
             adapterData = new ArrayList<ArtistTrack>();
+            updateTracks();
         } else {
             adapterData = savedInstanceState.getParcelableArrayList(EXTRA_TRACKLIST);
         }
@@ -79,7 +81,7 @@ public class ArtistTracksActivityFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        updateTracks();
+        //updateTracks();
     }
 
     private void updateTracks() {
@@ -155,9 +157,16 @@ public class ArtistTracksActivityFragment extends Fragment {
         protected void onPostExecute(List<ArtistTrack> tracks) {
             mTrackAdapter.clear();
             if (tracks != null && !tracks.isEmpty()) {
+                if (mToast != null) {
+                    mToast.cancel();
+                }
                 mTrackAdapter.addAll(tracks);
             } else {
-                Toast.makeText(getActivity(), R.string.no_tracks, Toast.LENGTH_SHORT).show();
+                if (mToast != null) {
+                    mToast.cancel();
+                }
+                mToast = Toast.makeText(getActivity(), R.string.no_tracks, Toast.LENGTH_SHORT);
+                mToast.show();
             }
 
         }

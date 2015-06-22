@@ -108,7 +108,7 @@ public class ArtistSearchActivityFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        updateArtistList(mSearchText.getText().toString());
+        //updateArtistList(mSearchText.getText().toString());
 
     }
 
@@ -177,6 +177,9 @@ public class ArtistSearchActivityFragment extends Fragment {
                 }
                 mArtistAdapter.addAll(artists);
             } else if (!mSearchText.getText().toString().isEmpty())  {
+                if (mToast != null) {
+                    mToast.cancel();
+                }
                 mToast = Toast.makeText(getActivity(), R.string.no_artists, Toast.LENGTH_SHORT);
                 mToast.show();
             }
