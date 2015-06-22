@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +20,9 @@ import java.util.List;
 
 import kaaes.spotify.webapi.android.SpotifyApi;
 import kaaes.spotify.webapi.android.SpotifyService;
-import kaaes.spotify.webapi.android.models.Artist;
 import kaaes.spotify.webapi.android.models.ArtistsPager;
+import kaaes.spotify.webapi.android.models.Image;
+import retrofit.RetrofitError;
 
 
 /**
@@ -31,6 +33,7 @@ public class ArtistSearchActivityFragment extends Fragment {
     private final String LOG_TAG = ArtistSearchActivityFragment.class.getSimpleName();
     private final String EXTRA_ARTISTNAME= "com.example.android.spotifystreamer.artistname";
     private final String EXTRA_SPOTIFYID = "com.example.android.spotifystreamer.spotifyid";
+    private final String EXTRA_ARTISTLIST = "com.example.android.spotifystreamer.artists";
     private ArtistArrayAdapter mArtistAdapter;
     private EditText mSearchText;
     private static Toast mToast;
@@ -44,8 +47,18 @@ public class ArtistSearchActivityFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_artist_search, container,false);
 
+        List<Artist> adapterData;
+
+
+        if (savedInstanceState == null || !savedInstanceState.containsKey(EXTRA_ARTISTLIST)) {
+            adapterData = new ArrayList<Artist>();
+        } else {
+            adapterData = savedInstanceState.getParcelableArrayList(EXTRA_ARTISTLIST);
+        }
+
+        //Log.v(LOG_TAG, "adapterData Count: " + adapterData.size());
         mArtistAdapter = new ArtistArrayAdapter(getActivity(),R.layout.list_item_artist_search,
-                new ArrayList<Artist>());
+                adapterData);
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_artist_search);
         listView.setAdapter(mArtistAdapter);
@@ -54,8 +67,8 @@ public class ArtistSearchActivityFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Artist artist = mArtistAdapter.getItem(position);
                 Intent intent = new Intent(getActivity(), ArtistTracksActivity.class);
-                intent.putExtra(EXTRA_ARTISTNAME, artist.name);
-                intent.putExtra(EXTRA_SPOTIFYID, artist.id);
+                intent.putExtra(EXTRA_ARTISTNAME, artist.getName());
+                intent.putExtra(EXTRA_SPOTIFYID, artist.getId());
                 startActivity(intent);
                 //Toast.makeText(getActivity(), "To be Implemented", Toast.LENGTH_SHORT).show();
             }
@@ -85,6 +98,12 @@ public class ArtistSearchActivityFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(EXTRA_ARTISTLIST, (ArrayList)mArtistAdapter.getArtists());
+        //Log.v(LOG_TAG, "Entered onSaveInstanceState" );
+    }
 
     @Override
     public void onStart() {
@@ -114,10 +133,39 @@ public class ArtistSearchActivityFragment extends Fragment {
                 return null;
             }
 
-            SpotifyApi api = new SpotifyApi();
-            SpotifyService spotify = api.getService();
-            ArtistsPager artists = spotify.searchArtists(searchTerm);
-            return artists.artists.items;
+            List<Artist> result = new ArrayList<Artist>();
+            String id;
+            String name;
+            String url;
+            Artist artist;
+
+            try {
+                SpotifyApi api = new SpotifyApi();
+                SpotifyService spotify = api.getService();
+                ArtistsPager artists = spotify.searchArtists(searchTerm);
+                for (kaaes.spotify.webapi.android.models.Artist item : artists.artists.items) {
+                    name = item.name;
+                    id = item.id;
+                    //try to load the image with the smallest size first
+                    //progressively going to bigger images till full list is traversed
+                    url = null;
+                    List<Image> images = item.images;
+                    if (images != null && !images.isEmpty()) {
+                        int idx = images.size() - 1;
+                        for (int i = idx; i >= 0; i--) {
+                            url = images.get(i).url;
+                            if (url != null)
+                                break;
+                        }
+                    }
+
+                    result.add(new Artist(id, name, url));
+                }
+
+            } catch (RetrofitError err) {
+                Log.e(LOG_TAG, "error from fetching data:\n"+ err.getMessage());
+            }
+            return result;
         }
 
         @Override

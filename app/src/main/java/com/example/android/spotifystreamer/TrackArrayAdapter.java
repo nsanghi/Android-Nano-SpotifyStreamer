@@ -12,20 +12,18 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-import kaaes.spotify.webapi.android.models.Image;
-import kaaes.spotify.webapi.android.models.Track;
 
 /**
  * Created by admin on 21-06-2015.
  */
-public class TrackArrayAdapter extends ArrayAdapter<Track> {
+public class TrackArrayAdapter extends ArrayAdapter<ArtistTrack> {
 
     private String LOG_TAG = TrackArrayAdapter.class.getSimpleName();
 
     private Context context;
-    private List<Track> tracks;
+    private List<ArtistTrack> tracks;
 
-    public TrackArrayAdapter(Context context, int resource, List<Track> tracks) {
+    public TrackArrayAdapter(Context context, int resource, List<ArtistTrack> tracks) {
         super(context, resource, tracks);
         this.context = context;
         this.tracks = tracks;
@@ -33,7 +31,7 @@ public class TrackArrayAdapter extends ArrayAdapter<Track> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Track track = tracks.get(position);
+        ArtistTrack track = tracks.get(position);
 
         View listItemView = convertView;
         if (listItemView == null) {
@@ -43,31 +41,19 @@ public class TrackArrayAdapter extends ArrayAdapter<Track> {
 
         //populate artist name
         TextView trackName = (TextView) listItemView.findViewById(R.id.track_name);
-        trackName.setText(track.name);
+        trackName.setText(track.getTrackName());
 
         TextView albumName = (TextView) listItemView.findViewById(R.id.album_name);
-        albumName.setText(track.album.name);
+        albumName.setText(track.getAlbumName());
 
         ImageView trackImage = (ImageView) listItemView.findViewById(R.id.track_image);
-
-        //try to load the image with the smallest size first
-        //progressively going to bigger images till full list is traversed
-        String url = null;
-        List<Image> images = track.album.images;
-        if (images != null && !images.isEmpty()) {
-            int idx = images.size() - 1;
-            for (int i = idx; i >= 0; i--) {
-                url = images.get(i).url;
-                if (url != null)
-                    break;
-            }
-        }
-        //if (url != null && !url.isEmpty()) {
-        Picasso.with(context).load(url).into(trackImage);
-        //}
+        Picasso.with(context).load(track.getSmallImageUrl()).into(trackImage);
 
         return listItemView;
     }
 
+    public List<ArtistTrack> getTracks() {
+        return tracks;
+    }
 }
 
