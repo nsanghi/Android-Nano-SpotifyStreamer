@@ -32,28 +32,37 @@ public class TrackArrayAdapter extends ArrayAdapter<ArtistTrack> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ArtistTrack track = tracks.get(position);
+        ViewHolder holder;
 
-        View listItemView = convertView;
-        if (listItemView == null) {
+        View view = convertView;
+        if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            listItemView = inflater.inflate(R.layout.list_item_artist_tracks, null);
+            view = inflater.inflate(R.layout.list_item_artist_tracks, null);
+            holder = new ViewHolder();
+            holder.trackName = (TextView) view.findViewById(R.id.track_name);
+            holder.albumName = (TextView) view.findViewById(R.id.album_name);
+            holder.trackImage = (ImageView) view.findViewById(R.id.track_image);
+            view.setTag(holder);
+        } else {
+            holder = (ViewHolder)view.getTag();
         }
 
-        //populate artist name
-        TextView trackName = (TextView) listItemView.findViewById(R.id.track_name);
-        trackName.setText(track.getTrackName());
+        //populate values
+        holder.trackName.setText(track.getTrackName());
+        holder.albumName.setText(track.getAlbumName());
+        Picasso.with(context).load(track.getSmallImageUrl()).into(holder.trackImage);
 
-        TextView albumName = (TextView) listItemView.findViewById(R.id.album_name);
-        albumName.setText(track.getAlbumName());
-
-        ImageView trackImage = (ImageView) listItemView.findViewById(R.id.track_image);
-        Picasso.with(context).load(track.getSmallImageUrl()).into(trackImage);
-
-        return listItemView;
+        return view;
     }
 
     public List<ArtistTrack> getTracks() {
         return tracks;
+    }
+
+    static class ViewHolder {
+        TextView trackName;
+        TextView albumName;
+        ImageView trackImage;
     }
 }
 

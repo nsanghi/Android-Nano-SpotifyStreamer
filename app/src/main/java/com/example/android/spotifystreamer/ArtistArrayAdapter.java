@@ -36,24 +36,33 @@ public class ArtistArrayAdapter extends ArrayAdapter<Artist> {
         Artist artist = artists.get(position);
         //Log.d(LOG_TAG, "ArtistName: "+artist.name);
 
-        View listItemView = convertView;
-        if (listItemView == null) {
+        ViewHolder holder;
+
+        View view = convertView;
+        if (view == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            listItemView = inflater.inflate(R.layout.list_item_artist_search, null);
+            view = inflater.inflate(R.layout.list_item_artist_search, null);
+            holder = new ViewHolder();
+            holder.artistName = (TextView) view.findViewById(R.id.artist_name);
+            holder.artistImage = (ImageView) view.findViewById(R.id.artist_image);
+            view.setTag(holder);
+        } else {
+            holder = (ViewHolder)view.getTag();
         }
 
-        //populate artist name
-        TextView artistName = (TextView) listItemView.findViewById(R.id.artist_name);
-        artistName.setText(artist.getName());
+        holder.artistName.setText(artist.getName());
+        Picasso.with(context).load(artist.getUrl()).into(holder.artistImage);
 
-        ImageView artistImage = (ImageView) listItemView.findViewById(R.id.artist_image);
-        Picasso.with(context).load(artist.getUrl()).into(artistImage);
-
-        return listItemView;
+        return view;
     }
 
     public List<Artist> getArtists () {
         return artists;
+    }
+
+    static class ViewHolder {
+        TextView artistName;
+        ImageView artistImage;
     }
 
 }
